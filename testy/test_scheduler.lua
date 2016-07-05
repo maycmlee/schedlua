@@ -27,17 +27,21 @@ end
 
 local function task2()
 	--print("second task, only line")
-  print("HIGH PRIORITY TASK!!!!")
+  print("HIGH PRIORITY TASK 1!!!!")
 end
 
+local function task3()
+  print("HIGH PRIORITY TASK 2!!!")
+end
 
 local function main()
 	local t1 = spawn(Scheduler, task1, "low")
 	local t2 = spawn(Scheduler, task2, "high")
+  local t3 = spawn(Scheduler, task3, "high")
 
 	while (true) do
 		--print("STATUS: ", t1:getStatus(), t2:getStatus())
-		if t1:getStatus() == "dead" and t2:getStatus() == "dead" then
+		if t1:getStatus() == "dead" and t2:getStatus() == "dead"  and t3:getStatus() == "dead" then
 			break;
 		end
 		Scheduler:step()
