@@ -1,7 +1,6 @@
 
 local ffi = require("ffi");
-
-local Queue = require("schedlua.queue")
+local Queue = require("schedlua.queue");
 local Task = require("schedlua.task");
 
 
@@ -31,9 +30,10 @@ function Scheduler.init(self, ...)
 	--print("==== Scheduler.init ====")
 	local obj = {
 		TasksReadyToRun = Queue();
+    TasksHighPriorityReadyToRun = Queue();
 	}
 	setmetatable(obj, Scheduler_mt)
-	
+  
 	return obj;
 end
 
@@ -49,7 +49,6 @@ function Scheduler.tasksPending(self)
 	return self.TasksReadyToRun:length();
 end
 
-
 --[[
 	Task Handling
 --]]
@@ -60,18 +59,24 @@ end
 -- metamethod implemented.
 -- The 'params' is a table of parameters which will be passed to the function
 -- when it's ready to run.
-function Scheduler.scheduleTask(self, task, params)
+function Scheduler.scheduleTask(self, task, priority, params)
 	--print("Scheduler.scheduleTask: ", task, params)
 	params = params or {}
-	
+
 	if not task then
 		return false, "no task specified"
 	end
-
-	task:setParams(params);
-	self.TasksReadyToRun:enqueue(task);	
-	task.state = "readytorun"
-
+  
+  if priority == "high" then
+   task:setParams(params);
+   self.TasksHighPriorityReadyToRun:enqueue(task);
+   task.state = "readytorun"
+  else    
+    task:setParams(params);
+    self.TasksReadyToRun:enqueue(task);	
+    task.state = "readytorun"
+  end
+  
 	return task;
 end
 
@@ -96,8 +101,15 @@ end
 
 function Scheduler.step(self)
 	-- Now check the regular fibers
-	local task = self.TasksReadyToRun:dequeue()
-
+  --Check if any task in HP Queue
+  local task
+  
+  if self.TasksHighPriorityReadyToRun:length() > 0 then
+    task = self.TasksHighPriorityReadyToRun:dequeue()
+  else
+    task = self.TasksReadyToRun:dequeue()
+  end
+  
 	-- If no fiber in ready queue, then just return
 	if task == nil then
 		--print("Scheduler.step: NO TASK")

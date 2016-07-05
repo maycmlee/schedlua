@@ -10,10 +10,10 @@ local function getNewTaskID()
 	return taskID;
 end
 
-local function spawn(scheduler, func, ...)
+local function spawn(scheduler, func, priority, ...)
 	local task = Task(func, ...)
 	task.TaskID = getNewTaskID();
-	scheduler:scheduleTask(task, {...});
+	scheduler:scheduleTask(task, priority, {...});
 	
 	return task;
 end
@@ -26,12 +26,14 @@ local function task1()
 end
 
 local function task2()
-	print("second task, only line")
+	--print("second task, only line")
+  print("HIGH PRIORITY TASK!!!!")
 end
 
+
 local function main()
-	local t1 = spawn(Scheduler, task1)
-	local t2 = spawn(Scheduler, task2)
+	local t1 = spawn(Scheduler, task1, "low")
+	local t2 = spawn(Scheduler, task2, "high")
 
 	while (true) do
 		--print("STATUS: ", t1:getStatus(), t2:getStatus())
